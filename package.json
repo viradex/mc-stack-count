@@ -1,0 +1,12 @@
+{
+  "name": "mc-stack-count",
+  "version": "1.0.0",
+  "description": "Get the stacks and items for a list of items in Minecraft!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
