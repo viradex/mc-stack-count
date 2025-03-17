@@ -86,7 +86,7 @@ const displayItems = async (data) => {
         message: "Press Enter to continue or type 'exit' to stop:",
       });
 
-      if (continueResponse.toLowerCase() === "exit") break;
+      if (continueResponse.toLowerCase() === "exit") process.exit(0);
       currentIndex += ITEMS_PER_PAGE;
     }
 
