@@ -2,16 +2,30 @@ import fs from "fs";
 import chalk from "chalk";
 import { input } from "@inquirer/prompts";
 
+/**
+ * The amount of items to display at a time.
+ */
+const ITEMS_PER_PAGE = 5;
+
 // Note there are more items with non-64 stack sizes such as potions,
 // but I couldn't be bothered to type them all out :P
 const stackSizes = JSON.parse(fs.readFileSync("itemStacks.json", { encoding: "utf-8" }));
 
-const getStackSize = (itemName) => {
-  // Check if a custom stack size exists for this item
-  return stackSizes[itemName.toLowerCase()] || stackSizes["default"];
-};
+/**
+ * Gets the custom stack size of the block/item, or 64 by default.
+ *
+ * @param {string} itemName The name of the block or item.
+ * @returns The number that the block/item can stack to.
+ */
+const getStackSize = (itemName) => stackSizes[itemName.toLowerCase()] || stackSizes["default"];
 
-// Function to calculate stacks and items
+/**
+ * Calculates the stacks and items of an item. Respects the maximum stack limit of items.
+ *
+ * @param {number} total The total amount of the specific block/item required for the build.
+ * @param {string} itemName The name of the item, for finding the stack limit.
+ * @returns An object containing the stacks and items.
+ */
 const calculateStacksAndItems = (total, itemName) => {
   const stackSize = getStackSize(itemName);
   const stacks = Math.floor(total / stackSize);
@@ -19,14 +33,17 @@ const calculateStacksAndItems = (total, itemName) => {
   return { stacks, items };
 };
 
+/**
+ * Display the items in the table.
+ *
+ * @param {[ { Item: string, Stacks: number, Items: number } ]} data An array of nested objects containing information about each item.
+ */
 const displayItems = async (data) => {
   try {
-    // This can be modified to any value!
-    const itemsPerPage = 5;
     let currentIndex = 0;
 
     while (currentIndex < data.length) {
-      const pageData = data.slice(currentIndex, currentIndex + itemsPerPage); // Get the next 5 items
+      const pageData = data.slice(currentIndex, currentIndex + ITEMS_PER_PAGE);
 
       console.log(
         "\n" +
@@ -58,7 +75,7 @@ const displayItems = async (data) => {
       });
 
       if (continueResponse.toLowerCase() === "exit") break;
-      currentIndex += itemsPerPage;
+      currentIndex += ITEMS_PER_PAGE;
     }
 
     console.log();
@@ -72,17 +89,26 @@ const displayItems = async (data) => {
   }
 };
 
+/**
+ * Convert strings containing numbers into numbers and removes double quotes surrounding strings.
+ *
+ * @param {string | any} value The value to convert.
+ * @returns The converted value.
+ */
 const convertValue = (value) => {
   // Remove quotes around values
   value = value.replace(/^"(.*)"$/, "$1");
 
   // Check if the value is a number and convert
-  if (!isNaN(value) && value.trim() !== "") {
-    return parseFloat(value);
-  }
+  if (!isNaN(value) && value.trim() !== "") return parseFloat(value);
   return value;
 };
 
+/**
+ * Prompts the user to enter the CSV filename.
+ *
+ * @returns The name and location of the CSV file.
+ */
 const getCSVFilename = async () => {
   try {
     const csvFilename = await input({
