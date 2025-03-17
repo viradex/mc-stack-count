@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from "fs";
 import chalk from "chalk";
 import { input } from "@inquirer/prompts";
@@ -20,23 +22,26 @@ const stackSizes = JSON.parse(fs.readFileSync("itemStacks.json", { encoding: "ut
 const getStackSize = (itemName) => stackSizes[itemName.toLowerCase()] || stackSizes["default"];
 
 /**
- * Calculates the stacks and items of an item. Respects the maximum stack limit of items.
+ * Calculates the stacks, items, and shulker boxes needed for an item.
  *
  * @param {number} total The total amount of the specific block/item required for the build.
  * @param {string} itemName The name of the item, for finding the stack limit.
- * @returns An object containing the stacks and items.
+ * @returns An object containing the stacks, items, and shulker boxes.
  */
 const calculateStacksAndItems = (total, itemName) => {
   const stackSize = getStackSize(itemName);
   const stacks = Math.floor(total / stackSize);
   const items = total % stackSize;
-  return { stacks, items };
+  const shulkerBoxes = Math.floor(stacks / 27);
+  const remainingStacks = stacks - shulkerBoxes * 27;
+
+  return { stacks: remainingStacks, items, shulkerBoxes };
 };
 
 /**
- * Display the items in the table.
+ * Display the items in the table, showing shulker boxes before stacks.
  *
- * @param {[ { Item: string, Stacks: number, Items: number } ]} data An array of nested objects containing information about each item.
+ * @param {[ { Item: string, Shulkerboxes?: number, Stacks: number, Items: number } ]} data An array of nested objects containing information about each item.
  */
 const displayItems = async (data) => {
   try {
@@ -49,18 +54,24 @@ const displayItems = async (data) => {
         "\n" +
           chalk.green.bold("Item".padEnd(25)) +
           " | " +
+          chalk.magenta.bold("Shulkers".padEnd(10)) +
+          " | " +
           chalk.cyan.bold("Stacks".padEnd(10)) +
           " | " +
           chalk.yellow.bold("Items".padEnd(10))
       );
-      console.log(chalk.gray("-".repeat(51)));
+      console.log(chalk.gray("-".repeat(65)));
 
       pageData.forEach((row) => {
         const item = row["Item"] || "N/A";
+        const shulkers = String(row["Shulkerboxes"] ?? 0);
         const stacks = row["Stacks"] || "0";
         const items = row["Items"] || "0";
+
         console.log(
           chalk.magenta(item.padEnd(25)) +
+            " | " +
+            chalk.green(shulkers.padStart(10)) +
             " | " +
             chalk.blue(String(stacks).padStart(10)) +
             " | " +
@@ -68,7 +79,6 @@ const displayItems = async (data) => {
         );
       });
 
-      // Prompt user to continue
       console.log();
       const continueResponse = await input({
         message: "Press Enter to continue or type 'exit' to stop:",
@@ -155,11 +165,15 @@ for (let i = 1; i < lines.length; i++) {
     delete rowObject["Missing"];
     delete rowObject["Available"];
 
-    // Replace 'Total' with Stacks and Items
+    // Replace 'Total' with Stacks, Items, and Shulkerboxes
     if (rowObject["Total"]) {
-      const { stacks, items } = calculateStacksAndItems(rowObject["Total"], rowObject["Item"]);
+      const { stacks, items, shulkerBoxes } = calculateStacksAndItems(
+        rowObject["Total"],
+        rowObject["Item"]
+      );
       rowObject["Stacks"] = stacks;
       rowObject["Items"] = items;
+      rowObject["Shulkerboxes"] = shulkerBoxes;
       delete rowObject["Total"];
     }
 
