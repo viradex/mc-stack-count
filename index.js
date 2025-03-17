@@ -4,14 +4,16 @@ import fs from "fs";
 import chalk from "chalk";
 import { input } from "@inquirer/prompts";
 
+// Note: this does not work with Prettier. Uncomment line 16 and comment out the following line when developing
+import stackSizes from "./itemStacks.json" with { type: "json" };
+
 /**
  * The amount of items to display at a time.
  */
 const ITEMS_PER_PAGE = 5;
 
-// Note there are more items with non-64 stack sizes such as potions,
-// but I couldn't be bothered to type them all out :P
-const stackSizes = JSON.parse(fs.readFileSync("itemStacks.json", { encoding: "utf-8" }));
+// Uncomment this line when developing so that it works with Prettier:
+// const stackSizes = JSON.parse(fs.readFileSync("itemStacks.json", { encoding: "utf-8" }));
 
 /**
  * Gets the custom stack size of the block/item, or 64 by default.
